@@ -1,19 +1,46 @@
-import { FunctionComponent, useState } from 'react';
+import { FunctionComponent, useEffect, useRef, useState } from 'react';
 import styled from 'styled-components';
 import { commands } from '../common/commands';
 
 const Input = styled.input`
-  width: 100%;
-  height: 80px;
-  padding: 0;
-  margin: 0;
+  width: 99%;
+  height: 55px;
+  background-color: transparent;
+  color: white;
+  border: 0;
+  &:focus,
+  &:active {
+    border: 0;
+    outline: none;
+  }
+  font-size: 18px;
+  padding-left: 4px;
+  color: white;
+  &::placeholder {
+    color: rgba(255, 255, 255, 0.8);
+    padding-left: 4px;
+  }
 `;
 
-export const FinderComponent: FunctionComponent = () => {
+interface FinderComponentState {
+  onSearch: (value: string) => void;
+  api: any;
+  focused?: boolean;
+  onChangeFocus?: () => void;
+}
+
+export const FinderComponent: FunctionComponent<FinderComponentState> = ({
+  onSearch,
+  api,
+  focused,
+  onChangeFocus,
+}) => {
   const [inputValue, setInputValue] = useState('');
-  const { api } = window as any;
-  const handleValueChanged: (e: any) => void = (e) =>
+  const inputRef = useRef<HTMLInputElement>();
+  const handleValueChanged: (e: any) => void = (e) => {
     setInputValue(e.target.value);
+    onSearch(e.target.value);
+  };
 
   const onKeyDown: (e: any) => void = (e) => {
     if (e.key === 'Enter') {
@@ -22,8 +49,20 @@ export const FinderComponent: FunctionComponent = () => {
           api.send(command.action);
         }
       }
+    } else if (e.key === 'ArrowDown') {
+      if (onChangeFocus) {
+        onChangeFocus();
+      }
     }
   };
+
+  useEffect(() => {
+    if (focused) {
+      inputRef.current.focus();
+    } else {
+      inputRef.current.blur();
+    }
+  }, [focused]);
 
   return (
     <Input
@@ -31,6 +70,7 @@ export const FinderComponent: FunctionComponent = () => {
       value={inputValue}
       onChange={handleValueChanged}
       onKeyDown={onKeyDown}
+      ref={inputRef}
     />
   );
 };

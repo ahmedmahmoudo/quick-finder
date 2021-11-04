@@ -1,8 +1,5 @@
-export const commands: {
-  name: string;
-  action: string;
-  description?: string;
-}[] = [
+import { CommandInterface } from './../interfaces';
+export const commands: CommandInterface[] = [
   {
     name: 'quit',
     action: 'quit-app',

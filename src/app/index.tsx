@@ -1,4 +1,4 @@
 import ReactDOM from 'react-dom';
-import { FinderComponent } from './finder/';
+import { MainComponent } from './main';
 
-ReactDOM.render(<FinderComponent />, document.getElementById('root'));
+ReactDOM.render(<MainComponent />, document.getElementById('root'));
