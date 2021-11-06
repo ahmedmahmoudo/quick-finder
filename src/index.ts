@@ -75,7 +75,9 @@ app.on('before-quit', () => {
 ipcMain.on('quit-app', () => {
   app.quit();
 });
-
+ipcMain.on('reload-apps', () => {
+  AppLoader.loadApps();
+});
 ipcMain.on('show-results', () => {
   mainWindow.setSize(FIXED_WIDTH, RESULTS_HEIGHT, false);
 });

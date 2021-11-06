@@ -5,4 +5,9 @@ export const commands: CommandInterface[] = [
     action: 'quit-app',
     description: 'quits the app',
   },
+  {
+    name: 'reload apps',
+    action: 'reload-apps',
+    description: 'reload list of applications',
+  },
 ];
