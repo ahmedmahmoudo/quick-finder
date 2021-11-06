@@ -3,7 +3,7 @@ import child_process from 'child_process';
 import path from 'path';
 export const getApplicationsSrc: () => string = () => {
   if (process.platform === 'linux') {
-    return `find /usr/share/applications `;
+    return `find /usr/share/applications`;
   } else if (process.platform === 'darwin') {
     return `mdfind -onlyin /Applications app`;
   }
@@ -16,11 +16,11 @@ export const getApplicationsInfo: (apps: string[]) => ResultInterface[] = (
   const listOfApps: ResultInterface[] = [];
   try {
     for (const app of apps) {
-      if (process.platform === 'linux') {
-        const result = child_process.execSync(`cat ${app}`);
-        listOfApps.push(readLinuxAppInfoFromString(result.toString()));
-      } else if (process.platform === 'darwin') {
-        if (isAnApp(app)) {
+      if (isAnApp(app)) {
+        if (process.platform === 'linux') {
+          const result = child_process.execSync(`cat ${app}`);
+          listOfApps.push(readLinuxAppInfoFromString(result.toString()));
+        } else if (process.platform === 'darwin') {
           const macOsApp = readMacAppInfoFromString(app);
           if (!listOfApps.find((p) => p.title === macOsApp.title))
             listOfApps.push(macOsApp);
@@ -68,5 +68,5 @@ export const readMacAppInfoFromString: (info: string) => ResultInterface = (
 };
 
 export const isAnApp: (app: string) => boolean = (app) => {
-  return path.extname(app) === '.app';
+  return path.extname(app) === '.app' || path.extname(app) === '.desktop';
 };
