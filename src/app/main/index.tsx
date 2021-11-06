@@ -1,16 +1,16 @@
 import { FunctionComponent, useEffect, useState } from 'react';
-import { FOCUS_ENUM } from '../common/enums';
 import { ResultInterface } from '../common/interfaces';
 import { FinderComponent } from '../finder';
-import { FindCommandHelper, FindApplicationsHelper } from '../helpers';
+import {
+  FindCommandHelper,
+  FindApplicationsHelper,
+  getTypeOfChoice,
+} from '../helpers';
 import { ResultListComponent } from '../result-list';
 
 export const MainComponent: FunctionComponent = () => {
   const [commandsList, setCommandsList] = useState<ResultInterface[]>([]);
   const [appsList, setAppsList] = useState<ResultInterface[]>([]);
-  const [currentFocus, setCurrentFocus] = useState<FOCUS_ENUM>(
-    FOCUS_ENUM.InputField
-  );
   const { api } = window as any;
 
   const onSearch = (value: string) => {
@@ -40,17 +40,22 @@ export const MainComponent: FunctionComponent = () => {
       api.toggleWidth(false);
     }
   }, [commandsList, appsList]);
+
+  const onEnterPressed: (choice: ResultInterface) => void = (choice) => {
+    const type = getTypeOfChoice(choice);
+    if (type === 'command') {
+      api.send(choice.exec);
+    } else {
+      api.send('open-app', choice.exec);
+    }
+  };
+
   return (
     <div>
-      <FinderComponent
-        onSearch={onSearch}
-        api={api}
-        focused={currentFocus === FOCUS_ENUM.InputField}
-        onChangeFocus={() => setCurrentFocus(FOCUS_ENUM.ResultList)}
-      />
+      <FinderComponent onSearch={onSearch} api={api} />
       <ResultListComponent
         resultsList={[...commandsList, ...appsList]}
-        onEnterPressed={() => console.log('pressed')}
+        onEnterPressed={onEnterPressed}
       />
     </div>
   );

@@ -1,3 +1,4 @@
+import { AppLoader } from './helpers/app-loader';
 import { app, BrowserWindow, ipcMain, screen } from 'electron';
 import child_process from 'child_process';
 import { getApplicationsSrc, getApplicationsInfo } from './helpers';
@@ -18,6 +19,7 @@ if (require('electron-squirrel-startup')) {
 }
 
 let mainWindow: BrowserWindow;
+let appsInterval;
 
 const createWindow = (): void => {
   const display = screen.getPrimaryDisplay();
@@ -42,7 +44,11 @@ const createWindow = (): void => {
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
-app.on('ready', () => setTimeout(createWindow, 1000));
+app.on('ready', () => {
+  createWindow();
+  AppLoader.loadApps();
+  appsInterval = setInterval(AppLoader.loadApps, 60000);
+});
 
 // Quit when all windows are closed, except on macOS. There, it's common
 // for applications and their menu bar to stay active until the user quits
@@ -60,6 +66,10 @@ app.on('activate', () => {
     createWindow();
   }
 });
+
+app.on('before-quit', () => {
+  clearInterval(appsInterval);
+});
 // In this file you can include the rest of your app's specific main process
 // code. You can also put them in separate files and import them here.
 ipcMain.on('quit-app', () => {
@@ -67,30 +77,28 @@ ipcMain.on('quit-app', () => {
 });
 
 ipcMain.on('show-results', () => {
-  mainWindow.setSize(FIXED_WIDTH, RESULTS_HEIGHT, true);
+  mainWindow.setSize(FIXED_WIDTH, RESULTS_HEIGHT, false);
 });
 
 ipcMain.on('hide-results', () => {
   mainWindow.setMinimumSize(FIXED_WIDTH, START_HEIGHT);
-  mainWindow.setSize(FIXED_WIDTH, START_HEIGHT, true);
+  mainWindow.setSize(FIXED_WIDTH, START_HEIGHT, false);
 });
 
 ipcMain.on('find-apps', (event, appName) => {
   if (appName) {
-    child_process.exec(
-      `find ${getApplicationsSrc()} -iname "${appName}*"`,
-      (error, stdout, stderr) => {
-        if (error) {
-          console.log(error);
-          return;
-        }
-        if (stdout.length > 0) {
-          const listOfApps = stdout.trim().split('\n');
-          event.sender.send('apps-found', getApplicationsInfo(listOfApps));
-        } else {
-          event.sender.send('apps-found', []);
-        }
+    event.sender.send('apps-found', AppLoader.getApps(appName));
+  }
+});
+
+ipcMain.on('open-app', (_, execCommand) => {
+  if (execCommand) {
+    child_process.exec(execCommand, (error) => {
+      if (error) {
+        console.error(error);
+      } else {
+        app.quit();
       }
-    );
+    });
   }
 });

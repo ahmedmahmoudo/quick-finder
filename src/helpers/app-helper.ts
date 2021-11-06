@@ -1,11 +1,11 @@
 import { ResultInterface } from './../app/common/interfaces/result.interface';
 import child_process from 'child_process';
-
+import path from 'path';
 export const getApplicationsSrc: () => string = () => {
   if (process.platform === 'linux') {
-    return '/usr/share/applications';
+    return `find /usr/share/applications `;
   } else if (process.platform === 'darwin') {
-    throw new Error('Not implemented yet');
+    return `mdfind -onlyin /Applications app`;
   }
   throw new Error('Unknown Platform (Or maybe windows?)');
 };
@@ -16,8 +16,16 @@ export const getApplicationsInfo: (apps: string[]) => ResultInterface[] = (
   const listOfApps: ResultInterface[] = [];
   try {
     for (const app of apps) {
-      const result = child_process.execSync(`cat ${app}`);
-      listOfApps.push(readLinuxAppInfoFromString(result.toString()));
+      if (process.platform === 'linux') {
+        const result = child_process.execSync(`cat ${app}`);
+        listOfApps.push(readLinuxAppInfoFromString(result.toString()));
+      } else if (process.platform === 'darwin') {
+        if (isAnApp(app)) {
+          const macOsApp = readMacAppInfoFromString(app);
+          if (!listOfApps.find((p) => p.title === macOsApp.title))
+            listOfApps.push(macOsApp);
+        }
+      }
     }
   } catch (e) {
     console.log(e);
@@ -46,4 +54,19 @@ export const readLinuxAppInfoFromString: (info: string) => ResultInterface = (
   }
 
   return { title, description, exec };
+};
+
+export const readMacAppInfoFromString: (info: string) => ResultInterface = (
+  info
+) => {
+  const title = info.split('/')[2].replace('.app', '');
+  return {
+    title,
+    description: 'To come soon for macOS',
+    exec: `open -a ${info}`,
+  };
+};
+
+export const isAnApp: (app: string) => boolean = (app) => {
+  return path.extname(app) === '.app';
 };

@@ -10,6 +10,7 @@ export class FindCommandHelper {
         listOfCommands.push({
           title: command.name,
           description: command.description,
+          exec: command.action,
         });
       }
     }
